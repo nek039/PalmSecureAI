@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PalmSecure - 掌纹识别系统</title>
+
+    <!-- Google Fonts - Crystalline Light -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static_custom', filename='css/style.css') }}?v=20260306slate">
+    {% block extra_styles %}{% endblock %}
+    <style>
+        /* 页面过渡动画 */
+        .content-wrapper {
+            animation: page-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes page-enter {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边导航栏 - 玻璃态 -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="{{ url_for('static_custom', filename='css/tongguan.svg') }}" alt="logo">
+                </div>
+                <div class="sidebar-title">
+                    <h1>掌纹识别系统</h1>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <a href="{{ url_for('dashboard') }}">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                        </span>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item {% if active_page == 'enroll' %}active{% endif %}">
+                    <a href="{{ url_for('enroll') }}">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <line x1="19" y1="8" x2="19" y2="14"/>
+                                <line x1="16" y1="11" x2="22" y2="11"/>
+                            </svg>
+                        </span>
+                        <span class="nav-text">用户注册</span>
+                    </a>
+                </li>
+                <li class="nav-item {% if active_page == 'recognize' %}active{% endif %}">
+                    <a href="{{ url_for('recognize') }}">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                                <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                                <line x1="7" y1="12" x2="17" y2="12"/>
+                            </svg>
+                        </span>
+                        <span class="nav-text">掌纹识别</span>
+                    </a>
+                </li>
+                <li class="nav-item {% if active_page == 'users' %}active{% endif %}">
+                    <a href="{{ url_for('users') }}">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </span>
+                        <span class="nav-text">用户管理</span>
+                    </a>
+                </li>
+                {% if current_role == 'admin' %}
+                <li class="nav-item {% if active_page == 'federated' %}active{% endif %}">
+                    <a href="{{ url_for('federated') }}">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                            </svg>
+                        </span>
+                        <span class="nav-text">联邦学习</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            <div class="sidebar-footer">
+                <div class="system-status" id="systemStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">系统在线</span>
+                </div>
+                {% if session.get('role') == 'admin' %}
+                <div class="sidebar-audit">
+                    <a href="#" onclick="showAuditLogs(); return false;" title="审计日志">
+                        <span>审计日志</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">PalmSecure</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">{% block page_title %}仪表板{% endblock %}</span>
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{% if session.get('role') == 'admin' %}总站管理员{% else %}{{ session.get('station', '分站') }}{% endif %}</span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn" title="退出登录">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-wrapper" style="animation: page-enter 0.4s ease-out;">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">处理中...</p>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{{ url_for('static_custom', filename='js/app.js') }}"></script>
+    <script>
+        // Toast 提示函数 - 使用 textContent 防止 XSS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            // 安全地创建消息元素
+            const messageSpan = document.createElement('span');
+            messageSpan.className = 'toast-message';
+            messageSpan.textContent = message;  // 使用 textContent 防止 XSS
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = function() { toast.remove(); };
+
+            toast.appendChild(messageSpan);
+            toast.appendChild(closeBtn);
+
+            container.appendChild(toast);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                toast.classList.add('toast-fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showAuditLogs() {
+            fetch('/api/admin_logs')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        showToast(data.message || '获取审计日志失败', 'error');
+                        return;
+                    }
+                    const logs = data.data || [];
+                    let html = '<table class="data-table"><thead><tr>' +
+                        '<th>时间</th><th>操作人</th><th>操作类型</th><th>目标</th><th>IP地址</th><th>详情</th>' +
+                        '</tr></thead><tbody>';
+                    if (logs.length === 0) {
+                        html += '<tr><td colspan="6" style="text-align:center">暂无日志</td></tr>';
+                    } else {
+                        logs.forEach(log => {
+                            html += '<tr>' +
+                                '<td>' + (log.timestamp || '') + '</td>' +
+                                '<td>' + (log.admin_username || '') + '</td>' +
+                                '<td>' + (log.action || '') + '</td>' +
+                                '<td>' + (log.target || '') + '</td>' +
+                                '<td>' + (log.ip_address || '') + '</td>' +
+                                '<td>' + (log.details || '') + '</td>' +
+                                '</tr>';
+                        });
+                    }
+                    html += '</tbody></table>';
+
+                    const modal = document.createElement('div');
+                    modal.className = 'modal';
+                    modal.innerHTML = '<div class="modal-content">' +
+                        '<div class="modal-header"><h3>审计日志</h3>' +
+                        '<button class="modal-close" onclick="this.closest(\'.modal\').remove()">×</button></div>' +
+                        '<div class="modal-body" style="max-height:500px;overflow-y:auto">' + html + '</div>' +
+                        '</div>';
+                    document.body.appendChild(modal);
+                    modal.style.display = 'flex';
+                })
+                .catch(err => {
+                    showToast('获取审计日志失败: ' + err, 'error');
+                });
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

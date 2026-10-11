@@ -1,0 +1,1847 @@
+{% extends "base.html" %}
+
+{% block page_title %}联邦学习{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* 联邦学习页面 - Crystalline Light */
+.federated-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+/* 状态卡片 - 增强版 */
+.status-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+}
+
+.status-card {
+    padding: var(--space-5);
+    text-align: center;
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.status-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+/* 不同卡片的顶部渐变颜色 */
+.status-card-coordinator::before { background: linear-gradient(90deg, #0EA5E9, #38BDF8); }
+.status-card-terminals::before { background: linear-gradient(90deg, #059669, #10B981); }
+.status-card-rounds::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.status-card-accuracy::before { background: linear-gradient(90deg, #8B5CF6, #A78BFA); }
+
+.status-card:hover::before {
+    opacity: 1;
+}
+
+.status-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+}
+
+.card-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.card-icon-primary {
+    background: var(--primary-50);
+    color: var(--primary-600);
+}
+
+.card-icon-success {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.card-icon-warning {
+    background: var(--warning-light);
+    color: var(--warning-color);
+}
+
+.card-icon-info {
+    background: var(--info-light);
+    color: var(--info-color);
+}
+
+.status-card h3 {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-indicator {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.status-online {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.status-offline {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+}
+
+.card-value {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.card-detail {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: var(--space-1) 0 0 0;
+}
+
+/* 控制面板 */
+.control-panel {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.control-panel h2 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.control-actions {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.control-actions .btn {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border: 1px solid var(--border-default);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.btn-primary {
+    color: white;
+    background: var(--primary-gradient);
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    color: var(--text-secondary);
+    background: var(--bg-raised);
+}
+
+.btn-secondary:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-tertiary {
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+}
+
+.btn-tertiary:hover {
+    color: var(--text-primary);
+}
+
+/* 训练进度 */
+.training-progress {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.training-progress h2 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.progress-container {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    border: 1px solid var(--border-light);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+
+.progress-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.progress-status {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.progress-bar {
+    height: 8px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    background: var(--bg-subtle);
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--primary-gradient);
+    transition: width 0.3s ease;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.progress-details {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-light);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+/* 终端列表 */
+.terminals-section {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.btn-sm {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+}
+
+.terminals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+/* 终端卡片 - 增强版 */
+.terminal-card {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.terminal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.terminal-card.online::before {
+    background: linear-gradient(180deg, #059669, #10B981);
+    opacity: 1;
+}
+
+.terminal-card.training::before {
+    background: linear-gradient(180deg, #0EA5E9, #38BDF8);
+    opacity: 1;
+    animation: slide-down 1.5s ease-in-out infinite;
+}
+
+@keyframes slide-down {
+    0%, 100% { transform: translateY(-50%); opacity: 0.5; }
+    50% { transform: translateY(0); opacity: 1; }
+}
+
+.terminal-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.terminal-card.offline {
+    opacity: 0.65;
+}
+
+.terminal-card.offline:hover {
+    opacity: 0.85;
+}
+
+.terminal-card.training {
+    border-color: rgba(14, 165, 233, 0.4);
+    box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.1);
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+
+.terminal-header h4 {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.terminal-status {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.terminal-status.online {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.terminal-status.offline {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+}
+
+.terminal-status.training {
+    background: var(--primary-50);
+    color: var(--primary-color);
+}
+
+.terminal-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.terminal-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--text-xs);
+}
+
+.info-label {
+    color: var(--text-muted);
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.terminal-card .terminal-actions {
+    padding-top: var(--space-3);
+    margin-top: var(--space-3);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+}
+
+.terminal-card .terminal-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+}
+
+/* 占位符 */
+.terminal-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--space-12) var(--space-5);
+    color: var(--text-muted);
+}
+
+.placeholder-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    color: var(--text-ghost);
+}
+
+.terminal-placeholder p {
+    margin: 0;
+    font-size: var(--text-sm);
+}
+
+/* 模态框 */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: var(--space-6);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-5);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    background: var(--bg-raised);
+    transition: var(--transition-fast);
+}
+
+.modal-close:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    margin-bottom: var(--space-5);
+}
+
+/* 详情 */
+.terminal-detail .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: var(--text-sm);
+}
+
+.terminal-detail .detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--text-muted);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.terminal-metrics {
+    margin-top: var(--space-5);
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+}
+
+.terminal-metrics h4 {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+.metric-item {
+    text-align: center;
+}
+
+.metric-label {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+}
+
+.metric-value {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.terminal-detail .terminal-actions {
+    margin-top: var(--space-5);
+    text-align: right;
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+}
+
+/* 表单 */
+.form-group {
+    margin-bottom: var(--space-4);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* 响应式 */
+@media (max-width: 1024px) {
+    .status-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .status-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .control-actions {
+        flex-direction: column;
+    }
+
+    .control-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Spinner 动画 */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Toast 样式 */
+.toast {
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.toast-success { background: var(--success-light); color: var(--success-color); border-left: 4px solid var(--success-color); }
+.toast-error { background: #FEE2E2; color: #DC2626; border-left: 4px solid #DC2626; }
+.toast-info { background: var(--info-light); color: var(--info-color); border-left: 4px solid var(--info-color); }
+.toast-warning { background: var(--warning-light); color: var(--warning-color); border-left: 4px solid var(--warning-color); }
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.6;
+    margin-left: 10px;
+}
+
+.toast-close:hover { opacity: 1; }
+
+.toast-fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* 训练日志面板 */
+.training-log {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.training-log h2 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.training-log h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+}
+
+.log-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    height: 200px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.8;
+}
+
+.log-entry {
+    margin: 0;
+    padding: 2px 0;
+    display: flex;
+    gap: var(--space-3);
+}
+
+.log-time {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.log-round {
+    color: var(--info-color);
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 80px;
+}
+
+.log-message {
+    color: var(--text-primary);
+}
+
+.log-message.success {
+    color: var(--success-color);
+}
+
+.log-message.warning {
+    color: var(--warning-color);
+}
+
+.log-message.error {
+    color: var(--danger-color);
+}
+
+.log-message.terminal {
+    color: var(--primary-color);
+}
+
+.log-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* 准确率曲线图 */
+.accuracy-chart {
+    padding: var(--space-5);
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.accuracy-chart h2 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.accuracy-chart h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, #8B5CF6, #A78BFA);
+    border-radius: 2px;
+}
+
+.chart-container {
+    position: relative;
+    height: 220px;
+}
+
+.chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="federated-page">
+    <!-- 协调器离线提示 -->
+    <div id="coordinatorOfflineBanner" class="alert alert-warning" style="display: none; margin-bottom: var(--space-4); padding: var(--space-4); background: var(--warning-light); border-radius: var(--radius-md); border-left: 4px solid var(--warning-color);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <strong>云协调器未运行</strong>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-muted);">联邦学习功能需要云协调器服务</p>
+            </div>
+            <button id="startCoordinatorBtn" class="btn btn-primary" onclick="startCoordinator()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px;">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                启动云协调器
+            </button>
+        </div>
+    </div>
+
+    <!-- 状态卡片 -->
+    <div class="status-cards">
+        <div class="status-card status-card-coordinator">
+            <div class="card-icon card-icon-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 11a9 9 0 0 1 9 9"/>
+                    <path d="M4 4a16 16 0 0 1 16 16"/>
+                    <circle cx="5" cy="19" r="1"/>
+                </svg>
+            </div>
+            <h3>云协调器</h3>
+            <div class="status-indicator status-online">在线</div>
+            <p class="card-detail">http://localhost:5002</p>
+        </div>
+        <div class="status-card status-card-terminals">
+            <div class="card-icon card-icon-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <h3>在线终端</h3>
+            <p class="card-value" id="onlineTerminals">0</p>
+            <p class="card-detail">个终端</p>
+        </div>
+        <div class="status-card status-card-rounds">
+            <div class="card-icon card-icon-warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v4"/>
+                    <path d="m16.2 7.8 2.9-2.9"/>
+                    <path d="M18 12h4"/>
+                    <path d="m16.2 16.2 2.9 2.9"/>
+                    <path d="M12 18v4"/>
+                    <path d="m4.9 19.1 2.9-2.9"/>
+                    <path d="M2 12h4"/>
+                    <path d="m4.9 4.9 2.9 2.9"/>
+                </svg>
+            </div>
+            <h3>训练轮数</h3>
+            <p class="card-value" id="totalRounds">0</p>
+            <p class="card-detail">轮</p>
+        </div>
+        <div class="status-card status-card-accuracy">
+            <div class="card-icon card-icon-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+            <h3>平均准确率</h3>
+            <p class="card-value" id="avgAccuracy">--</p>
+            <p class="card-detail">%</p>
+        </div>
+    </div>
+
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <h2>控制面板</h2>
+        <div class="control-actions">
+            <button class="btn btn-primary" id="startTrainingBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                开始训练
+            </button>
+            <button class="btn btn-secondary" id="stopTrainingBtn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                停止训练
+            </button>
+            <button class="btn btn-tertiary" id="resetSystemBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                重置系统
+            </button>
+        </div>
+    </div>
+
+    <!-- 训练进度 -->
+    <div class="training-progress">
+        <h2>训练进度</h2>
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">全局模型</span>
+                <span class="progress-status" id="modelStatus">未初始化</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="globalProgress" style="width: 0%;"></div>
+            </div>
+            <div class="progress-stats">
+                <span>完成度</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-details">
+                <span id="pendingUpdatesInfo">等待更新: 0</span>
+                <span style="margin: 0 var(--space-2);">|</span>
+                <span id="activeTerminalsInfo">训练中终端: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 训练日志面板 -->
+    <div class="training-log">
+        <h2>训练日志</h2>
+        <div class="log-container" id="logContainer">
+            <p class="log-empty">暂无训练日志</p>
+        </div>
+    </div>
+
+    <!-- 准确率曲线 -->
+    <div class="accuracy-chart">
+        <h2>准确率变化</h2>
+        <div class="chart-container">
+            <canvas id="accuracyChart"></canvas>
+            <div class="chart-placeholder" id="chartPlaceholder">开始训练后显示曲线</div>
+        </div>
+    </div>
+
+    <!-- 终端列表 -->
+    <div class="terminals-section">
+        <div class="section-header">
+            <h2>终端状态</h2>
+            <div class="section-actions">
+                <button class="btn btn-sm btn-primary" id="addTerminalBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    添加终端
+                </button>
+            </div>
+        </div>
+        <div class="terminals-grid" id="terminalsGrid">
+            <div class="terminal-placeholder">
+                <div class="placeholder-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <p>暂无终端连接</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 终端详情模态框 -->
+    <div class="modal" id="terminalModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="terminalModalTitle">终端详情</h3>
+                <button class="modal-close" id="closeTerminalModalBtn">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="terminal-detail">
+                    <div class="detail-row">
+                        <span class="detail-label">终端 ID</span>
+                        <span class="detail-value" id="terminalDetailId">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">终端名称</span>
+                        <span class="detail-value" id="terminalDetailName">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">连接状态</span>
+                        <span class="detail-value" id="terminalDetailStatus">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">本地轮数</span>
+                        <span class="detail-value" id="terminalDetailRounds">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">样本数量</span>
+                        <span class="detail-value" id="terminalDetailSamples">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">最后上传</span>
+                        <span class="detail-value" id="terminalDetailLastUpload">--</span>
+                    </div>
+                </div>
+
+                <div class="terminal-metrics">
+                    <h4>训练指标</h4>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Loss</span>
+                            <span class="metric-value" id="terminalDetailLoss">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Accuracy</span>
+                            <span class="metric-value" id="terminalDetailAccuracy">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terminal-actions">
+                    <button class="btn btn-sm btn-secondary" id="editTerminalBtn">编辑</button>
+                    <button class="btn btn-sm btn-ghost" style="color: var(--danger-color);" id="deleteTerminalBtn">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑终端模态框 -->
+    <div class="modal" id="addTerminalModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="addTerminalModalTitle">添加终端</h3>
+                <button class="modal-close" id="closeAddTerminalModalBtn">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>终端名称 *</label>
+                    <input type="text" id="newTerminalName" class="form-control" placeholder="例如：口岸3">
+                </div>
+                <div style="text-align: right; margin-top: var(--space-5);">
+                    <button class="btn btn-secondary" id="cancelAddTerminalBtn">取消</button>
+                    <button class="btn btn-primary" id="saveTerminalBtn" style="margin-left: var(--space-2);">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js for accuracy curve -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// 通过Flask代理调用协调器，避免跨域问题
+const COORDINATOR_URL = '/coordinator-proxy';
+
+let terminalsData = [];
+let isTraining = false;
+let refreshInterval = null;
+let coordinatorOnline = false;
+let accuracyChart = null;
+let previousRound = 0;
+let previousTerminalStates = {};
+let previousPendingUpdates = 0;
+let previousIsTraining = false;
+let previousAccuracy = null;  // 跟踪上次准确率，避免重复添加
+let trainingLog = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initAccuracyChart();
+    checkCoordinatorAndLoad();
+    startAutoRefresh();
+    setupEventListeners();
+});
+
+async function checkCoordinatorAndLoad() {
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/status`, { signal: AbortSignal.timeout(15000) });
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+            coordinatorOnline = true;
+            document.getElementById('coordinatorOfflineBanner').style.display = 'none';
+            updateStatusCards(result.data);
+            updateTerminalsList(result.data);
+            return;
+        }
+    } catch (error) {
+        console.log('协调器离线:', error.message);
+    }
+
+    // 协调器离线
+    coordinatorOnline = false;
+    document.getElementById('coordinatorOfflineBanner').style.display = 'block';
+    const statusEl = document.querySelector('.status-card-coordinator .status-indicator');
+    if (statusEl) {
+        statusEl.className = 'status-indicator status-offline';
+        statusEl.textContent = '离线';
+    }
+    document.getElementById('modelStatus').textContent = '等待启动';
+}
+
+async function startCoordinator() {
+    const btn = document.getElementById('startCoordinatorBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 启动中...';
+
+    try {
+        // 使用20秒超时，因为后端需要加载模型
+        const response = await fetch('/api/coordinator/start', {
+            method: 'POST',
+            signal: AbortSignal.timeout(20000)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            showToast('云协调器启动成功', 'success');
+            document.getElementById('coordinatorOfflineBanner').style.display = 'none';
+            coordinatorOnline = true;
+            // 等待一秒后重新加载状态
+            setTimeout(() => {
+                loadFederatedStatus();
+            }, 1000);
+        } else {
+            showToast('启动失败: ' + result.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> 启动云协调器';
+        }
+    } catch (error) {
+        let errorMsg = error.message;
+        if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+            errorMsg = '请求超时，云协调器可能正在启动中，请稍后刷新页面';
+        }
+        showToast('启动失败: ' + errorMsg, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> 启动云协调器';
+    }
+}
+
+// ========== 训练日志功能 ==========
+
+function addLog(round, message, type = 'normal') {
+    const container = document.getElementById('logContainer');
+
+    // 移除空的占位符
+    const placeholder = container.querySelector('.log-empty');
+    if (placeholder) placeholder.remove();
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'log-time';
+    timeSpan.textContent = timeStr;
+
+    const roundSpan = document.createElement('span');
+    roundSpan.className = 'log-round';
+    roundSpan.textContent = round ? `Round ${round}` : '';
+
+    const msgSpan = document.createElement('span');
+    msgSpan.className = `log-message ${type}`;
+    msgSpan.textContent = message;
+
+    entry.appendChild(timeSpan);
+    entry.appendChild(roundSpan);
+    entry.appendChild(msgSpan);
+
+    container.appendChild(entry);
+
+    // 自动滚动到底部
+    container.scrollTop = container.scrollHeight;
+
+    // 保存到日志数组
+    trainingLog.push({ time: timeStr, round, message, type });
+}
+
+function initAccuracyChart() {
+    const ctx = document.getElementById('accuracyChart').getContext('2d');
+
+    accuracyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '准确率',
+                data: [],
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 6,
+                pointBackgroundColor: '#8B5CF6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 11 },
+                    callbacks: {
+                        label: function(context) {
+                            return '准确率: ' + (context.raw * 100).toFixed(1) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 1,
+                    ticks: {
+                        callback: function(value) {
+                            return (value * 100).toFixed(0) + '%';
+                        },
+                        font: { size: 11 },
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        color: 'rgba(107, 114, 128, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateAccuracyChart(round, accuracy) {
+    if (!accuracyChart) return;
+
+    // 检查是否已经存在该轮次的数据
+    const existingIndex = accuracyChart.data.labels.indexOf('R' + round);
+    if (existingIndex !== -1) {
+        // 已存在，更新该点
+        accuracyChart.data.datasets[0].data[existingIndex] = accuracy;
+    } else {
+        // 不存在，添加新点
+        accuracyChart.data.labels.push('R' + round);
+        accuracyChart.data.datasets[0].data.push(accuracy);
+    }
+
+    // 隐藏占位符
+    const placeholder = document.getElementById('chartPlaceholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // 动态调整Y轴范围
+    const data = accuracyChart.data.datasets[0].data;
+    const minAccuracy = Math.min(...data);
+    const maxAccuracy = Math.max(...data);
+    const padding = 0.05; // 5% padding
+    const yMin = Math.max(0, Math.floor((minAccuracy - padding) * 10) / 10);
+    const yMax = Math.min(1, Math.ceil((maxAccuracy + padding) * 10) / 10);
+
+    accuracyChart.options.scales.y.min = yMin;
+    accuracyChart.options.scales.y.max = yMax;
+    accuracyChart.update('none');
+}
+
+function setupEventListeners() {
+    document.getElementById('startTrainingBtn').addEventListener('click', startTraining);
+    document.getElementById('stopTrainingBtn').addEventListener('click', stopTraining);
+    document.getElementById('resetSystemBtn').addEventListener('click', resetSystem);
+    document.getElementById('addTerminalBtn').addEventListener('click', showAddTerminalModal);
+    document.getElementById('closeTerminalModalBtn').addEventListener('click', hideTerminalModal);
+    document.querySelector('#terminalModal .modal-overlay').addEventListener('click', hideTerminalModal);
+
+    document.getElementById('closeAddTerminalModalBtn').addEventListener('click', hideAddTerminalModal);
+    document.querySelector('#addTerminalModal .modal-overlay').addEventListener('click', hideAddTerminalModal);
+    document.getElementById('cancelAddTerminalBtn').addEventListener('click', hideAddTerminalModal);
+    document.getElementById('saveTerminalBtn').addEventListener('click', saveTerminal);
+    document.getElementById('editTerminalBtn').addEventListener('click', editCurrentTerminal);
+    document.getElementById('deleteTerminalBtn').addEventListener('click', deleteCurrentTerminal);
+
+    document.getElementById('terminalsGrid').addEventListener('click', function(e) {
+        const card = e.target.closest('.terminal-card');
+        if (card && !e.target.closest('.btn')) {
+            const terminalId = card.dataset.id;
+            showTerminalDetail(terminalId);
+        }
+    });
+}
+
+async function loadFederatedStatus() {
+    await checkCoordinatorAndLoad();
+}
+
+function updateStatusCards(data) {
+    const currentRound = data.round || 0;
+
+    // 检测轮数变化 - 聚合完成的标志
+    if (currentRound > previousRound) {
+        if (previousRound === 0 && currentRound === 1) {
+            addLog(currentRound, `第 ${currentRound} 轮聚合完成`, 'success');
+        } else if (currentRound > previousRound) {
+            addLog(currentRound, `第 ${currentRound} 轮聚合完成`, 'success');
+        }
+        previousRound = currentRound;
+
+        // 如果训练结束（is_training=false 且 pending=0），显示完成
+        if (!data.is_training && (data.pending_updates || 0) === 0 && currentRound > 0) {
+            addLog(currentRound, `联邦学习训练完成，共 ${currentRound} 轮`, 'success');
+        }
+    }
+
+    document.getElementById('totalRounds').textContent = currentRound;
+    document.getElementById('onlineTerminals').textContent = data.online_terminals || 0;
+
+    const modelReady = data.model_loaded || false;
+    const statusEl = document.querySelector('.status-card-coordinator .status-indicator');
+
+    if (modelReady) {
+        statusEl.className = 'status-indicator status-online';
+        statusEl.textContent = '在线';
+        document.getElementById('modelStatus').textContent = data.is_training ? '训练中...' : '已就绪';
+    } else {
+        statusEl.className = 'status-indicator status-offline';
+        statusEl.textContent = '离线';
+        document.getElementById('modelStatus').textContent = '未初始化';
+    }
+
+    // 处理准确率
+    let currentAccuracy = null;
+    if (data.accuracy) {
+        currentAccuracy = data.accuracy;
+        document.getElementById('avgAccuracy').textContent = (currentAccuracy * 100).toFixed(1);
+    } else if (data.accuracy_history && data.accuracy_history.length > 0) {
+        const lastAcc = data.accuracy_history[data.accuracy_history.length - 1];
+        currentAccuracy = lastAcc.accuracy || lastAcc;
+        document.getElementById('avgAccuracy').textContent = (currentAccuracy * 100).toFixed(1);
+    } else {
+        document.getElementById('avgAccuracy').textContent = '--';
+    }
+
+    // 处理准确率历史图表
+    if (data.accuracy_history && data.accuracy_history.length > 0) {
+        // 加载所有历史数据到图表
+        data.accuracy_history.forEach(item => {
+            const round = item.round;
+            const accuracy = item.accuracy || item;
+            // 只添加不重复的点
+            if (round > 0 && accuracy && accuracy !== previousAccuracy) {
+                updateAccuracyChart(round, accuracy);
+                previousAccuracy = accuracy;
+            }
+        });
+    } else if (currentRound > 0 && currentAccuracy) {
+        // 单点数据
+        if (currentAccuracy !== previousAccuracy) {
+            updateAccuracyChart(currentRound, currentAccuracy);
+            previousAccuracy = currentAccuracy;
+        }
+    }
+
+    // 检测 pending_updates 变化 - 聚合开始/完成
+    const pendingUpdates = data.pending_updates || 0;
+    if (previousPendingUpdates > 0 && pendingUpdates === 0) {
+        addLog(currentRound, '协调器: 正在聚合权重 (FedAvg)...', 'warning');
+    } else if (previousPendingUpdates === 0 && pendingUpdates > 0) {
+        addLog(currentRound, `已收到 ${pendingUpdates} 个终端的权重更新...`, 'normal');
+    }
+    previousPendingUpdates = pendingUpdates;
+
+    document.getElementById('pendingUpdatesInfo').textContent = `等待更新: ${data.pending_updates || 0}`;
+    document.getElementById('activeTerminalsInfo').textContent = `训练中终端: ${data.active_terminals || 0}`;
+
+    if (data.is_training) {
+        document.getElementById('modelStatus').textContent = '训练中...';
+        if (data.training_rounds && data.training_rounds > 0) {
+            const totalRounds = data.training_rounds;
+            const percent = Math.min(Math.round((currentRound / totalRounds) * 100), 95);
+            document.getElementById('globalProgress').style.width = Math.max(percent, 10) + '%';
+            document.getElementById('progressPercent').textContent = `第 ${currentRound}/${totalRounds} 轮`;
+        } else {
+            document.getElementById('globalProgress').style.width = '50%';
+            document.getElementById('progressPercent').textContent = '进行中';
+        }
+    } else {
+        document.getElementById('modelStatus').textContent = '已就绪';
+        // 检测训练完成（从训练中变为完成）
+        if (previousIsTraining && currentRound > 0) {
+            addLog(currentRound, `联邦学习训练完成！`, 'success');
+            // 自动重置按钮状态
+            isTraining = false;
+            document.getElementById('startTrainingBtn').disabled = false;
+            document.getElementById('stopTrainingBtn').disabled = true;
+        }
+        // 如果已经有轮次数据但之前没显示过完成消息
+        else if (!previousIsTraining && currentRound > 0 && pendingUpdates === 0) {
+            // 训练已完成但前端没检测到，显示完成状态
+            document.getElementById('globalProgress').style.width = '100%';
+            document.getElementById('progressPercent').textContent = `完成 (${currentRound}轮)`;
+        }
+    }
+    previousIsTraining = data.is_training;
+}
+
+// XSS 转义函数
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+function updateTerminalsList(data) {
+    const grid = document.getElementById('terminalsGrid');
+
+    if (data.terminals && data.terminals.length > 0) {
+        // 检测终端状态变化并添加日志
+        data.terminals.forEach(terminal => {
+            const terminalId = String(terminal.id);
+            const prevState = previousTerminalStates[terminalId];
+
+            if (prevState) {
+                // 检测是否从离线变为在线
+                if (!prevState.online && terminal.online) {
+                    addLog(data.round || 0, `${terminal.name} 已连接`, 'terminal');
+                }
+                // 检测是否开始训练
+                if (prevState.training !== terminal.training && terminal.training) {
+                    addLog(data.round || 0, `${terminal.name}: 本地训练中...`, 'terminal');
+                }
+                // 检测是否上传权重
+                if (prevState.local_rounds < terminal.local_rounds) {
+                    addLog(data.round || 0, `${terminal.name}: 本地训练完成 (loss=${terminal.loss ? terminal.loss.toFixed(4) : '--'})`, 'terminal');
+                }
+            }
+
+            previousTerminalStates[terminalId] = {
+                online: terminal.online,
+                training: terminal.training,
+                local_rounds: terminal.local_rounds || 0,
+                loss: terminal.loss
+            };
+        });
+
+        terminalsData = data.terminals;
+
+        grid.innerHTML = data.terminals.map(terminal => {
+            // 转义所有动态内容以防止 XSS
+            const safeId = escapeHtml(terminal.id);
+            const safeName = escapeHtml(terminal.name);
+            const safeRounds = escapeHtml(terminal.local_rounds || 0);
+            const safeSamples = escapeHtml(terminal.sample_count || 0);
+            const safeTime = escapeHtml(formatTime(terminal.last_update));
+
+            return `
+            <div class="terminal-card ${terminal.online ? 'online' : 'offline'} ${terminal.training ? 'training' : ''}" data-id="${safeId}">
+                <div class="terminal-header">
+                    <h4>${safeName}</h4>
+                    <span class="terminal-status ${terminal.training ? 'training' : (terminal.online ? 'online' : 'offline')}">
+                        ${terminal.training ? '训练中' : (terminal.online ? '在线' : '离线')}
+                    </span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-info">
+                        <span class="info-label">本地轮数</span>
+                        <span class="info-value">${safeRounds}</span>
+                    </div>
+                    <div class="terminal-info">
+                        <span class="info-label">样本数</span>
+                        <span class="info-value">${safeSamples}</span>
+                    </div>
+                    <div class="terminal-info">
+                        <span class="info-label">最后更新</span>
+                        <span class="info-value">${safeTime}</span>
+                    </div>
+                </div>
+                <div class="terminal-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); editTerminalById('${safeId}')" title="编辑">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); uploadTerminal('${safeId}')" title="上传">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); deleteTerminalById('${safeId}')" title="删除" style="color: var(--danger-color);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                    <button class="btn ${terminal.online ? 'btn-ghost' : 'btn-primary'} btn-sm" onclick="event.stopPropagation(); toggleTerminal('${safeId}', ${terminal.online})" data-terminal-id="${safeId}">
+                        ${terminal.online ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'}
+                    </button>
+                </div>
+            </div>
+        `}).join('');
+    } else {
+        grid.innerHTML = `
+            <div class="terminal-placeholder">
+                <div class="placeholder-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <p>暂无终端连接</p>
+            </div>
+        `;
+    }
+}
+
+async function startTraining() {
+    if (isTraining) return;
+
+    const rounds = prompt('请输入训练轮数:', '1');
+    if (!rounds) return;
+
+    isTraining = true;
+    document.getElementById('startTrainingBtn').disabled = true;
+    document.getElementById('stopTrainingBtn').disabled = false;
+
+    document.getElementById('modelStatus').textContent = '启动中...';
+    document.getElementById('globalProgress').style.width = '10%';
+    document.getElementById('progressPercent').textContent = '启动中';
+
+    // 重置训练状态
+    previousRound = 0;
+    previousPendingUpdates = 0;
+    previousTerminalStates = {};
+
+    addLog(0, `开始 ${rounds} 轮联邦学习训练...`, 'success');
+    showToast('正在启动联邦学习训练...', 'info');
+
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/start_training`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rounds: parseInt(rounds) })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            showToast('训练已启动! 请等待终端完成训练', 'success');
+            document.getElementById('modelStatus').textContent = '训练中...';
+            document.getElementById('globalProgress').style.width = '20%';
+            document.getElementById('progressPercent').textContent = '训练中';
+        } else {
+            showToast('启动失败: ' + (result.message || '未知错误'), 'error');
+            document.getElementById('startTrainingBtn').disabled = false;
+        }
+    } catch (error) {
+        showToast('启动训练失败: ' + error.message, 'error');
+        console.error('启动训练失败:', error);
+        document.getElementById('startTrainingBtn').disabled = false;
+    }
+
+    isTraining = false;
+}
+
+function stopTraining() {
+    isTraining = false;
+    document.getElementById('startTrainingBtn').disabled = false;
+    document.getElementById('stopTrainingBtn').disabled = true;
+    showToast('训练已停止', 'info');
+}
+
+async function resetSystem() {
+    if (!confirm('确定要重置系统吗？所有训练进度将丢失。')) return;
+
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/reset`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            showToast('系统已重置', 'success');
+            await loadFederatedStatus();
+        }
+    } catch (error) {
+        showToast('重置失败: ' + error.message, 'error');
+    }
+}
+
+function hideTerminalModal() {
+    document.getElementById('terminalModal').style.display = 'none';
+}
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(() => {
+        checkCoordinatorAndLoad();
+    }, 2000);  // 每2秒刷新一次
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+function formatTime(dateStr) {
+    if (!dateStr) return '--';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now - date;
+
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+    return date.toLocaleDateString('zh-CN');
+}
+
+let currentEditingTerminalId = null;
+
+function editTerminalById(terminalId) {
+    const terminal = terminalsData.find(t => String(t.id) === String(terminalId));
+    if (!terminal) return;
+
+    currentEditingTerminalId = terminalId;
+    document.getElementById('addTerminalModalTitle').textContent = '编辑终端';
+    document.getElementById('newTerminalName').value = terminal.name || '';
+    document.getElementById('addTerminalModal').style.display = 'flex';
+}
+
+function showAddTerminalModal() {
+    document.getElementById('addTerminalModalTitle').textContent = '添加终端';
+    document.getElementById('newTerminalName').value = '';
+    currentEditingTerminalId = null;
+    document.getElementById('addTerminalModal').style.display = 'flex';
+}
+
+function hideAddTerminalModal() {
+    document.getElementById('addTerminalModal').style.display = 'none';
+}
+
+let isSavingTerminal = false;
+
+async function saveTerminal() {
+    if (isSavingTerminal) return;
+
+    const name = document.getElementById('newTerminalName').value.trim();
+
+    if (!name) {
+        showToast('请输入终端名称', 'error');
+        return;
+    }
+
+    isSavingTerminal = true;
+    const saveBtn = document.getElementById('saveTerminalBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '保存中...';
+
+    try {
+        let url, method;
+        if (currentEditingTerminalId) {
+            url = `${COORDINATOR_URL}/terminals/${currentEditingTerminalId}`;
+            method = 'PUT';
+        } else {
+            url = `${COORDINATOR_URL}/terminals`;
+            method = 'POST';
+        }
+
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            showToast(currentEditingTerminalId ? '终端已更新' : '终端已添加', 'success');
+            hideAddTerminalModal();
+            await loadFederatedStatus();
+        } else {
+            showToast('操作失败: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('操作失败: ' + error.message, 'error');
+    } finally {
+        isSavingTerminal = false;
+        saveBtn.disabled = false;
+        saveBtn.textContent = '保存';
+    }
+}
+
+async function deleteTerminalById(terminalId) {
+    if (!confirm('确定要删除此终端吗？')) return;
+
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/terminals/${terminalId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            showToast('终端已删除', 'success');
+            await loadFederatedStatus();
+        } else {
+            showToast('删除失败: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('删除失败: ' + error.message, 'error');
+    }
+}
+
+function editCurrentTerminal() {
+    if (!currentEditingTerminalId) return;
+
+    const terminal = terminalsData.find(t => String(t.id) === String(currentEditingTerminalId));
+    if (!terminal) return;
+
+    document.getElementById('addTerminalModalTitle').textContent = '编辑终端';
+    document.getElementById('newTerminalName').value = terminal.name || '';
+    hideTerminalModal();
+    document.getElementById('addTerminalModal').style.display = 'block';
+}
+
+async function deleteCurrentTerminal() {
+    if (!currentEditingTerminalId) return;
+
+    if (!confirm('确定要删除此终端吗？')) return;
+
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/terminals/${currentEditingTerminalId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            showToast('终端已删除', 'success');
+            hideTerminalModal();
+            await loadFederatedStatus();
+        } else {
+            showToast('删除失败: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('删除失败: ' + error.message, 'error');
+    }
+}
+
+function showTerminalDetail(terminalId) {
+    currentEditingTerminalId = terminalId;
+    const terminal = terminalsData.find(t => String(t.id) === String(currentEditingTerminalId));
+    if (!terminal) return;
+
+    document.getElementById('terminalModalTitle').textContent = '终端详情';
+    document.getElementById('terminalDetailId').textContent = terminal.id;
+    document.getElementById('terminalDetailName').textContent = terminal.name;
+    document.getElementById('terminalDetailStatus').textContent = terminal.online ? '在线' : '离线';
+    document.getElementById('terminalDetailRounds').textContent = terminal.local_rounds || 0;
+    document.getElementById('terminalDetailSamples').textContent = terminal.sample_count || 0;
+    document.getElementById('terminalDetailLastUpload').textContent = formatTime(terminal.last_update);
+    document.getElementById('terminalDetailLoss').textContent = terminal.loss ? terminal.loss.toFixed(4) : '--';
+    document.getElementById('terminalDetailAccuracy').textContent = '--';
+    document.getElementById('terminalModal').style.display = 'flex';
+}
+
+async function toggleTerminal(terminalId, isOnline) {
+    try {
+        if (isOnline) {
+            const response = await fetch(`${COORDINATOR_URL}/terminals/${terminalId}/stop`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                showToast('终端已停止', 'success');
+            } else {
+                showToast('停止失败: ' + result.message, 'error');
+            }
+        } else {
+            showToast('正在启动终端...', 'info');
+            const response = await fetch(`${COORDINATOR_URL}/terminals/${terminalId}/start`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                showToast('终端已启动', 'success');
+            } else {
+                showToast('启动失败: ' + result.message, 'error');
+            }
+        }
+        await loadFederatedStatus();
+    } catch (error) {
+        showToast('操作失败: ' + error.message, 'error');
+    }
+}
+
+async function uploadTerminal(terminalId) {
+    const terminal = terminalsData.find(t => String(t.id) === String(terminalId));
+    const terminalName = terminal ? terminal.name : `终端 ${terminalId}`;
+
+    showToast(`正在触发 ${terminalName} 上传更新...`, 'info');
+
+    try {
+        const response = await fetch(`${COORDINATOR_URL}/terminals/${terminalId}/upload`, {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            showToast(`${terminalName} 已开始上传更新`, 'success');
+        } else {
+            showToast('上传失败: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('上传失败: ' + error.message, 'error');
+    }
+}
+</script>
+{% endblock %}

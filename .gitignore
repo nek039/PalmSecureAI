@@ -1,0 +1,23 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Local project data and generated artifacts
+data/
+models/
+outputs/
+logs/
+*.db
+*.pth
+*.pt
+*.onnx
+*.tflite
+*.log
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store

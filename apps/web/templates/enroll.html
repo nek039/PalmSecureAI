@@ -1,0 +1,933 @@
+{% extends "base.html" %}
+
+{% block page_title %}用户注册{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* 注册页面 - Crystalline Light Enhanced */
+.enroll-page {
+    padding: 0;
+}
+
+.enroll-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: stretch;
+}
+
+/* 页面标题区 */
+.page-header {
+    margin-bottom: var(--space-6);
+}
+
+.page-header h1 {
+    margin: 0 0 var(--space-2) 0;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.page-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* 左侧 - 表单 */
+.form-section {
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-6);
+    transition: var(--transition-normal);
+}
+
+.form-section:hover {
+    box-shadow: var(--glass-shadow);
+}
+
+.form-section h2 {
+    margin: 0 0 var(--space-6) 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.form-section h2::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    background: var(--primary-gradient);
+}
+
+.form-group {
+    margin-bottom: var(--space-5);
+}
+
+.form-group > label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+}
+
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.form-group input[type="text"]::placeholder {
+    color: var(--text-ghost);
+}
+
+.form-group small {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+/* 图片预览 */
+.image-preview-area {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    text-align: center;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    display: none;
+}
+
+.image-preview-area.show {
+    display: block;
+}
+
+.image-preview-area img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: var(--radius-sm);
+}
+
+.preview-quality-info {
+    margin-top: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.quality-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.quality-score {
+    font-weight: 700;
+    font-size: var(--text-lg);
+    color: var(--primary-color);
+}
+
+/* 拖拽上传 - 增强版 */
+.drop-zone {
+    padding: var(--space-10) var(--space-6);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border-default);
+    position: relative;
+    overflow: hidden;
+}
+
+.drop-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, var(--primary-50) 0%, transparent 70%);
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.drop-zone:hover::before,
+.drop-zone.drag-over::before {
+    opacity: 1;
+}
+
+.drop-zone:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.drop-zone.drag-over {
+    border-color: var(--primary-color);
+    border-style: solid;
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+}
+
+.drop-zone .drop-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+    color: var(--primary-600);
+    transition: var(--transition-bounce);
+    position: relative;
+}
+
+.drop-zone .drop-icon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--primary-200);
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.drop-zone:hover .drop-icon {
+    transform: scale(1.08);
+}
+
+.drop-zone:hover .drop-icon::after {
+    opacity: 1;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
+
+.drop-zone .drop-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.drop-zone p {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+}
+
+.drop-zone small {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.drop-zone a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.drop-zone a:hover {
+    text-decoration: underline;
+}
+
+/* 批量预览 */
+.batch-preview {
+    margin-top: var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    border: 1px solid var(--border-light);
+    display: none;
+}
+
+.batch-preview.show {
+    display: block;
+}
+
+.batch-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
+
+.batch-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.batch-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-fast);
+}
+
+.batch-preview-item:hover {
+    transform: scale(1.02);
+}
+
+.batch-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.batch-preview-item .preview-quality {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 2px 0;
+    font-size: 9px;
+    font-weight: 600;
+    text-align: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.batch-preview-item .preview-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: var(--danger-color);
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.batch-preview-item:hover .preview-remove {
+    opacity: 1;
+}
+
+.batch-quality-summary {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.batch-quality-summary strong {
+    color: var(--primary-color);
+}
+
+/* 按钮 */
+.form-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+}
+
+.btn-enroll-primary {
+    flex: 1;
+    padding: var(--space-4) var(--space-6);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    background: var(--primary-gradient);
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-enroll-primary:hover:not(:disabled) {
+    background: var(--primary-gradient-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
+}
+
+.btn-enroll-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-enroll-primary:disabled {
+    background: linear-gradient(135deg, #9CA3AF, #6B7280);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-enroll-secondary {
+    padding: var(--space-4) var(--space-6);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    background: var(--bg-raised);
+}
+
+.btn-enroll-secondary:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.btn-clear {
+    padding: var(--space-1) var(--space-3);
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-clear:hover {
+    color: var(--danger-color);
+}
+
+/* 右侧 - 信息 */
+.info-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.info-section > * {
+    flex: 1;
+}
+
+.info-card {
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-5);
+}
+
+.info-card h3 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.tips-card {
+    background: var(--primary-50);
+    border-color: rgba(5, 150, 105, 0.15);
+}
+
+.tips-card h3 {
+    color: var(--primary-700);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.tips-card h3::before {
+    content: '💡';
+    font-size: var(--text-xl);
+}
+
+.tips-card ul {
+    margin: 0;
+    padding-left: var(--space-6);
+    color: var(--text-primary);
+    font-size: var(--text-base);
+    line-height: 2;
+}
+
+.tips-card li {
+    margin-bottom: var(--space-3);
+    padding-left: var(--space-2);
+}
+
+.tips-card li::marker {
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.features-card ul {
+    margin: 0;
+    padding-left: var(--space-5);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.features-card li {
+    margin-bottom: var(--space-3);
+    padding-left: var(--space-1);
+}
+
+.features-card li::marker {
+    color: var(--info-color);
+}
+
+.features-card strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* 最近注册 */
+.recent-card {
+    background: var(--bg-raised);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-5);
+}
+
+.recent-card h3 {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.enrollment-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.enrollment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+.enrollment-info {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.enrollment-info .user-id {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: var(--text-sm);
+}
+
+.enrollment-info .user-name {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.enrollment-time {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+.enrollment-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: var(--space-6);
+    font-size: var(--text-sm);
+}
+
+/* 响应式 */
+@media (max-width: 900px) {
+    .enroll-container {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="enroll-page">
+    <div class="enroll-container">
+        <!-- 左侧 - 表单 -->
+        <div class="form-section">
+            <h2>注册新用户</h2>
+
+            <div class="form-group">
+                <label for="userId">用户 ID *</label>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="userId" placeholder="例如: PALM-A7B3" style="flex:1;">
+                    <button type="button" id="generateIdBtn" style="background:none;border:none;cursor:pointer;font-size:1.2rem;padding:4px;" title="随机生成ID">
+                        🎲
+                    </button>
+                </div>
+                <small id="userIdHint">点击"摇号"随机生成，或手动输入</small>
+                <div id="userIdWarning" style="color:var(--warning-color);font-size:0.8rem;margin-top:4px;display:none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="userName">用户姓名</label>
+                <input type="text" id="userName" placeholder="例如: 张三">
+            </div>
+
+            <div class="form-group">
+                <label>掌纹图像 <small style="color:var(--text-muted)">(支持多选)</small></label>
+
+                <!-- 图片预览 -->
+                <div class="image-preview-area" id="imagePreviewArea">
+                    <img id="previewImage" src="" alt="预览">
+                    <div class="preview-quality-info">
+                        <span class="quality-label">质量:</span>
+                        <span class="quality-score" id="previewQuality">--</span>
+                    </div>
+                </div>
+
+                <!-- 上传区域 -->
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <p>拖拽图片或 <a href="#" id="clickUpload">点击选择</a></p>
+                    <small>支持 JPG、PNG，可多选</small>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+
+                <!-- 批量预览 -->
+                <div class="batch-preview" id="batchPreview">
+                    <div class="batch-preview-header">
+                        <span>已选 <span id="selectedCount">0</span> 张</span>
+                        <button type="button" class="btn-clear" id="clearSelectionBtn">清空</button>
+                    </div>
+                    <div class="batch-preview-grid" id="batchPreviewGrid"></div>
+                    <div class="batch-quality-summary">平均质量: <strong id="avgQuality">--</strong></div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-enroll-primary" id="enrollBtn" disabled>注册</button>
+                <button type="button" class="btn-enroll-secondary" id="resetBtn">重置</button>
+            </div>
+        </div>
+
+        <!-- 右侧 - 信息 -->
+        <div class="info-section">
+            <div class="recent-card">
+                <h3>最近注册</h3>
+                <div class="enrollment-list" id="enrollmentList">
+                    <div class="enrollment-empty"><p>暂无注册记录</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    let batchUploadData = [];
+    let capturedImageData = null;
+
+    const userIdInput = document.getElementById('userId');
+    const userNameInput = document.getElementById('userName');
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const enrollBtn = document.getElementById('enrollBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const clickUpload = document.getElementById('clickUpload');
+    const previewArea = document.getElementById('imagePreviewArea');
+    const batchPreview = document.getElementById('batchPreview');
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentEnrollments();
+        setupEvents();
+    });
+
+    function setupEvents() {
+        clickUpload.addEventListener('click', function(e) { e.preventDefault(); fileInput.click(); });
+        dropZone.addEventListener('click', function(e) { if (e.target === dropZone || e.target.closest('.drop-icon')) fileInput.click(); });
+        fileInput.addEventListener('change', function(e) { handleFiles(e.target.files); });
+
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+        enrollBtn.addEventListener('click', doEnroll);
+        resetBtn.addEventListener('click', resetForm);
+        clearSelectionBtn.addEventListener('click', clearBatch);
+
+        // 摇号生成ID
+        document.getElementById('generateIdBtn').addEventListener('click', function() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let id = 'PALM-';
+            for (let i = 0; i < 4; i++) {
+                id += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            userIdInput.value = id;
+            userIdInput.focus();
+            checkUserIdExists();
+        });
+
+        // 用户ID输入框失去焦点时检查唯一性
+        userIdInput.addEventListener('blur', function() {
+            checkUserIdExists();
+        });
+        userIdInput.addEventListener('input', function() {
+            // 输入时隐藏警告
+            document.getElementById('userIdWarning').style.display = 'none';
+            document.getElementById('userIdHint').style.display = '';
+        });
+    }
+
+    async function checkUserIdExists() {
+        const userId = userIdInput.value.trim();
+        if (!userId) return;
+
+        try {
+            const res = await fetch('/api/users/' + encodeURIComponent(userId));
+            const result = await res.json();
+            const warning = document.getElementById('userIdWarning');
+            const hint = document.getElementById('userIdHint');
+            if (result.success) {
+                // 用户已存在
+                warning.textContent = '该ID已存在，将追加模板到该用户';
+                warning.style.display = '';
+                hint.style.display = 'none';
+            } else {
+                // 用户不存在
+                warning.style.display = 'none';
+                hint.style.display = '';
+            }
+        } catch (e) {
+            // 网络错误时忽略
+        }
+    }
+
+    function handleFiles(files) {
+        const images = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (!images.length) { showToast('请选择图片文件', 'warning'); return; }
+        images.length === 1 ? processSingle(images[0]) : processBatch(images);
+    }
+
+    function processSingle(file) {
+        readFile(file, function(data) {
+            calcQuality(data, function(q) {
+                document.getElementById('previewImage').src = data;
+                document.getElementById('previewQuality').textContent = Math.round(q * 100) + '%';
+                previewArea.classList.add('show');
+                capturedImageData = data;
+                enrollBtn.disabled = false;
+                showToast('图片已加载', 'success');
+            });
+        });
+    }
+
+    function processBatch(files) {
+        batchUploadData = [];
+        batchPreview.classList.add('show');
+        document.getElementById('batchPreviewGrid').innerHTML = '';
+        let count = 0, totalQ = 0;
+
+        files.forEach(function(file, idx) {
+            readFile(file, function(data) {
+                calcQuality(data, function(q) {
+                    batchUploadData.push({ index: idx, imageData: data, quality: q });
+                    totalQ += q;
+                    count++;
+
+                    const item = document.createElement('div');
+                    item.className = 'batch-preview-item';
+                    item.innerHTML = '<img src="' + data + '"><div class="preview-quality">' + Math.round(q * 100) + '%</div><button class="preview-remove" data-idx="' + idx + '">×</button>';
+                    document.getElementById('batchPreviewGrid').appendChild(item);
+                    item.querySelector('.preview-remove').addEventListener('click', function() { removeItem(parseInt(this.dataset.idx)); });
+
+                    document.getElementById('selectedCount').textContent = count;
+                    document.getElementById('avgQuality').textContent = Math.round(totalQ / count * 100) + '%';
+
+                    if (count === 1) {
+                        document.getElementById('previewImage').src = data;
+                        document.getElementById('previewQuality').textContent = Math.round(q * 100) + '%';
+                        previewArea.classList.add('show');
+                        capturedImageData = data;
+                    }
+                    if (count === files.length) enrollBtn.disabled = false;
+                });
+            });
+        });
+        showToast('已选择 ' + files.length + ' 张图片', 'success');
+    }
+
+    function readFile(file, cb) {
+        const reader = new FileReader();
+        reader.onload = function(e) { cb(e.target.result); };
+        reader.readAsDataURL(file);
+    }
+
+    function calcQuality(dataUrl, cb) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let b = 0;
+            for (let i = 0; i < d.length; i += 4) b += (d[i] + d[i+1] + d[i+2]) / 3;
+            b /= d.length / 4;
+            let v = 0;
+            for (let i = 0; i < d.length; i += 4) v += Math.pow((d[i] + d[i+1] + d[i+2]) / 3 - b, 2);
+            const c = Math.sqrt(v / (d.length / 4));
+            cb((1 - Math.abs(b - 128) / 128) * 0.5 + Math.min(c / 50, 1) * 0.5);
+        };
+        img.src = dataUrl;
+    }
+
+    function removeItem(idx) {
+        batchUploadData = batchUploadData.filter(function(item) { return item.index !== idx; });
+        renderBatch();
+    }
+
+    function renderBatch() {
+        const grid = document.getElementById('batchPreviewGrid');
+        grid.innerHTML = '';
+        document.getElementById('selectedCount').textContent = batchUploadData.length;
+        let totalQ = 0;
+        batchUploadData.forEach(function(item) {
+            totalQ += item.quality;
+            const el = document.createElement('div');
+            el.className = 'batch-preview-item';
+            el.innerHTML = '<img src="' + item.imageData + '"><div class="preview-quality">' + Math.round(item.quality * 100) + '%</div><button class="preview-remove" data-idx="' + item.index + '">×</button>';
+            grid.appendChild(el);
+            el.querySelector('.preview-remove').addEventListener('click', function() { removeItem(parseInt(this.dataset.idx)); });
+        });
+        if (batchUploadData.length > 0) {
+            document.getElementById('avgQuality').textContent = Math.round(totalQ / batchUploadData.length * 100) + '%';
+        } else {
+            batchPreview.classList.remove('show');
+            enrollBtn.disabled = true;
+        }
+    }
+
+    function clearBatch() {
+        batchUploadData = [];
+        capturedImageData = null;
+        batchPreview.classList.remove('show');
+        previewArea.classList.remove('show');
+        enrollBtn.disabled = true;
+        showToast('已清空', 'info');
+    }
+
+    async function doEnroll() {
+        const userId = userIdInput.value.trim();
+        const userName = userNameInput.value.trim();
+        if (!userId) { showToast('请输入用户ID', 'warning'); userIdInput.focus(); return; }
+        if (batchUploadData.length > 0) await batchEnroll(userId, userName);
+        else if (capturedImageData) await singleEnroll(userId, userName);
+        else showToast('请先上传图片', 'warning');
+    }
+
+    async function singleEnroll(userId, userName, force = false) {
+        showLoading('正在注册...');
+        try {
+            const res = await fetch('/api/enroll', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, user_name: userName, image: capturedImageData, force: force })
+            });
+            const result = await res.json();
+            hideLoading();
+            if (result.success) { showToast('注册成功！', 'success'); resetForm(); loadRecentEnrollments(); }
+            else if (result.error === 'UserExists') {
+                // 用户已存在，弹出确认对话框
+                if (confirm(result.message + '\n\n点击"确定"追加模板，"取消"取消操作。')) {
+                    await singleEnroll(userId, userName, true);
+                }
+            } else {
+                showToast('注册失败: ' + (result.message || '未知错误'), 'error');
+            }
+        } catch (err) { hideLoading(); showToast('注册失败: ' + err.message, 'error'); }
+    }
+
+    async function batchEnroll(userId, userName, force = false) {
+        showLoading('正在批量注册...');
+        try {
+            const images = batchUploadData.map(function(item) { return item.imageData; });
+            const res = await fetch('/api/enroll/batch-upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, user_name: userName, images: images, force: force })
+            });
+            const result = await res.json();
+            hideLoading();
+            if (result.success) {
+                const d = result.data;
+                showToast('完成！成功 ' + d.success_count + ' 张，失败 ' + d.failed_count + ' 张', 'success');
+                clearBatch(); resetForm(); loadRecentEnrollments();
+            } else if (result.error === 'UserExists') {
+                if (confirm(result.message + '\n\n点击"确定"追加模板，"取消"取消操作。')) {
+                    await batchEnroll(userId, userName, true);
+                }
+            } else {
+                showToast('注册失败: ' + (result.message || '未知错误'), 'error');
+            }
+        } catch (err) { hideLoading(); showToast('注册失败: ' + err.message, 'error'); }
+    }
+
+    function resetForm() {
+        userIdInput.value = '';
+        userNameInput.value = '';
+        capturedImageData = null;
+        batchUploadData = [];
+        previewArea.classList.remove('show');
+        batchPreview.classList.remove('show');
+        enrollBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    async function loadRecentEnrollments() {
+        try {
+            const res = await fetch('/api/users?limit=5');
+            const result = await res.json();
+            if (result.success && result.data && result.data.users && result.data.users.length > 0) {
+                document.getElementById('enrollmentList').innerHTML = result.data.users.map(function(u) {
+                    return '<div class="enrollment-item"><div class="enrollment-info"><span class="user-id">' + u.user_id + '</span><span class="user-name">' + (u.user_name || '未命名') + '</span></div><span class="enrollment-time">' + (u.created_at || '') + '</span></div>';
+                }).join('');
+            }
+        } catch (err) { console.error('加载失败:', err); }
+    }
+})();
+</script>
+{% endblock %}

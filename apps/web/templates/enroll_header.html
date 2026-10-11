@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block page_title %}用户注册 V2{% endblock %}
+
+{% block content %}
+<div class="enroll-page">
+    <div class="enroll-container">
+        <!-- 相机预览区 -->
+        <div class="camera-section">
+            <div class="camera-wrapper">
+                <video id="cameraPreview" autoplay playsinline></video>
+                <canvas id="captureCanvas" style="display: none;"></canvas>
+                <div class="camera-placeholder" id="cameraPlaceholder">
+                    <p>📷 点击下方按钮启动摄像头</p>
+                </div>
+
+                <div class="captured-image-container" id="capturedImageContainer" style="display: none;">
+                    <img id="capturedImage" src="" alt="已捕获图像">
+                    <div class="image-quality" id="imageQuality">
+                        <span class="quality-label">图像质量</span>
+                        <span class="quality-score" id="capturedQuality">--</span>
+                    </div>
+                    <button class="btn retake-btn" id="retakeBtn">
+                        <span>🔄 重新拍摄</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="camera-controls">
+                <button class="btn btn-primary btn-large" id="startCameraBtn">
+                    <span>📷 启动摄像头</span>
+                </button>
+                <button class="btn btn-success btn-large" id="captureBtn" style="display: none;">
+                    <span>📸 拍摄</span>
+                </button>
+                <button class="btn btn-info btn-large" id="autoCaptureBtn" style="display: none;">
+                    <span>🔄 自动捕获</span>
+                </button>
+                <button class="btn btn-warning btn-large" id="stopAutoCaptureBtn" style="display: none;">
+                    <span>⏹️ 停止自动捕获</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 表单区 -->
+        <div class="form-section">
+            <div class="form-card">
+                <h2>注册新用户</h2>
+
+                <!-- 注册模式选择 -->
+                <div class="mode-selector">
+                    <button class="mode-option active" id="singleModeBtn" data-mode="single">
+                        <span class="mode-icon">📸</span>
+                        <span class="mode-text">单张注册</span>
+                    </button>
+                    <button class="mode-option" id="batchModeBtn" data-mode="batch">
+                        <span class="mode-icon">📚</span>
+                        <span class="mode-text">批量注册</span>
+                    </button>
+                </div>
+
+                <!-- 单张注册表单 -->
+                <div id="singleEnrollForm">
+                    <div class="form-group">
+                        <label for="userId">用户 ID *</label>
+                        <input type="text" id="userId" name="user_id" required
+                               placeholder="例如: user_001"
+                               pattern="^[-a-zA-Z0-9_]+$">
+                        <small>用户 ID 只能包含字母、数字、下划线和连字符</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userName">用户姓名</label>
+                        <input type="text" id="userName" name="user_name"
+                               placeholder="例如: 张三">
+                    </div>
+
+                    <div class="form-group">
+                        <label>掌纹图像 *</label>
+                        <div class="image-upload-area">
+                            <div class="upload-placeholder">
+                                <span class="upload-icon">📷</span>
+                                <p>使用摄像头拍摄</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="imageData" name="image">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary btn-large" id="enrollBtn" disabled>
+                            <span>✓ 注册</span>
+                        </button>
+                    <button type="reset" class="btn btn-secondary" id="resetBtn">
+                            <span>重置表单</span>
+                        </button>
+                </div>
+
+                <!-- 批量注册表单 -->
+                <div id="batchEnrollForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="batchUserId">用户 ID *</label>
+                        <input type="text" id="batchUserId" name="user_id" required
+                               placeholder="例如: user_001"
+                               pattern="^[-a-zA-Z0-9_]+$">
+                        <small>用户 ID 只能包含字母、数字、下划线和连字符</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batchUserName">用户姓名</label>
+                        <input type="text" id="batchUserName" name="user_name"
+                               placeholder="例如: 张三">
+                    </div>
+
+                    <div class="form-group">
+                        <label>已收集图像： <span id="collectedCount">0</span>/5</label>
+                        <div class="collected-preview" id="collectedPreview">
+                            <span class="preview-placeholder">暂无图像</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-success btn-large" id="submitBatchBtn" disabled>
+                            <span>📚 提交批量注册</span>
+                        </button>
+                        <button type="button" class="btn btn-info btn-large" id="addSampleBtn">
+                            <span>➕ 添加当前样本</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="clearBatchBtn">
+                            <span>🗑️ 清空</span>
+                        </button>
+                    </div>
+
+                    <!-- 批量注册状态 -->
+                    <div class="batch-status">
+                        <div class="status-header">
+                            <span>📊 批量注册状态</span>
+                            <span class="status-detail" id="batchStatusDetail">准备中</span>
+                        </div>
+                        <div class="status-body">
+                            <div class="status-item">
+                                <span class="status-label">收集进度</span>
+                                <span class="status-value" id="batchProgress">0/0</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="batchProgressBar"></div>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">平均质量</span>
+                                <span class="status-value" id="batchAvgQuality">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 注册提示 -->
+                <div class="tips-card">
+                    <h3>💡 注册提示</h3>
+                    <ul>
+                        <li>确保手掌完整显示在画面中</li>
+                        <li>保持手掌平整，光线充足</li>
+                        <li>避免手指遮挡或手掌弯曲</li>
+                        <li><strong>建议每个用户注册3-5张不同角度的样本</strong>提高准确率</li>
+                    </ul>
+                </div>
+
+            </div>
+    </div>
+
+    <!-- 注册历史 -->
+    <div class="recent-enrollments">
+        <h2>最近注册</h2>
+        <div class="enrollment-list" id="enrollmentList">
+            <div class="enrollment-empty">
+                <p>暂无注册记录</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}

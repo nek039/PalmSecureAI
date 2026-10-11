@@ -1,0 +1,1488 @@
+{% extends "base.html" %}
+
+{% block page_title %}用户管理{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* ==========================================
+   用户管理页面 - 统一风格重设计
+   ========================================== */
+
+.users-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- 页面头部 ---- */
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.users-header-left h1 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
+}
+
+.users-header-left p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.users-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.header-btn:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+/* ---- 统计卡片行 ---- */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon.users { background: var(--primary-100); color: var(--primary-600); }
+.stat-icon.templates { background: var(--success-light); color: var(--success-color); }
+.stat-icon.selected { background: var(--accent-100); color: var(--accent-color); }
+
+.stat-info { flex: 1; min-width: 0; }
+
+.stat-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ---- 筛选操作栏 ---- */
+.filter-bar {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* 站点筛选胶囊 */
+.station-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.station-filters-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+.station-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.station-pill:hover {
+    border-color: var(--border-strong);
+}
+
+.station-pill.active {
+    color: var(--text-primary);
+    border-color: currentColor;
+    background: var(--bg-raised);
+}
+
+.station-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 搜索框 */
+.filter-search {
+    position: relative;
+}
+
+.filter-search input {
+    height: 34px;
+    padding: 0 12px 0 32px;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    width: 220px;
+    transition: all 0.15s;
+}
+
+.filter-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: var(--bg-raised);
+}
+
+.filter-search input::placeholder { color: var(--text-ghost); }
+
+.filter-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-ghost);
+    pointer-events: none;
+}
+
+/* 操作按钮 */
+.filter-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.action-btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.action-btn:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.action-btn.primary {
+    background: var(--primary-gradient);
+    border-color: transparent;
+    color: white;
+}
+
+.action-btn.primary:hover {
+    box-shadow: 0 2px 8px rgba(24, 24, 27, 0.2);
+}
+
+.action-btn.danger {
+    color: var(--danger-color);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.danger:hover {
+    background: var(--danger-light);
+    border-color: var(--danger-color);
+}
+
+/* ---- 数据表格 ---- */
+.table-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+}
+
+.users-table td {
+    padding: 11px 14px;
+    font-size: 0.83rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+
+.users-table tbody tr:last-child td { border-bottom: none; }
+
+.users-table tbody tr:hover td {
+    background: var(--bg-surface);
+}
+
+.checkbox-cell { width: 36px; text-align: center; }
+.checkbox-cell input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary-color); }
+
+.user-id-cell {
+    font-weight: 600;
+    color: var(--primary-700);
+    font-size: 0.85rem;
+}
+
+.user-name-cell { color: var(--text-secondary); }
+
+/* 站点徽章 */
+.station-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+/* 样本徽章 */
+.sample-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: var(--primary-100);
+    color: var(--primary-600);
+}
+
+.sample-badge.ok {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+/* 质量条 */
+.quality-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quality-bar {
+    width: 52px;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+}
+
+.quality-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 99px;
+    transition: width 0.3s;
+}
+
+.quality-pct {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 30px;
+}
+
+/* 操作按钮 */
+.actions-cell { white-space: nowrap; }
+
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background: var(--bg-raised);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    margin-right: 4px;
+}
+
+.icon-btn:last-child { margin-right: 0; }
+
+.icon-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.icon-btn.danger:hover { border-color: var(--danger-color); color: var(--danger-color); background: var(--danger-light); }
+
+/* 空状态 */
+.table-empty {
+    padding: 56px 20px;
+    text-align: center;
+}
+
+.table-empty-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 14px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-ghost);
+}
+
+.table-empty p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ---- 分页 ---- */
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-light);
+}
+
+.table-footer-info {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-btn {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background: var(--bg-raised);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.page-info {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0 4px;
+}
+
+/* ---- 通用模态框 ---- */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.38);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 440px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--bg-raised);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-muted);
+    background: var(--bg-raised);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.modal-close:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+/* ---- 设置弹窗 ---- */
+.settings-section { margin-bottom: 16px; }
+.settings-section:last-child { margin-bottom: 0; }
+
+.settings-section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.station-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.station-color-row:last-child { border-bottom: none; }
+
+.station-color-name {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.station-color-options {
+    display: flex;
+    gap: 5px;
+}
+
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.12s;
+}
+
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-raised); }
+
+/* 颜色预设 */
+.color-swatch.slate    { background: #71717A; }
+.color-swatch.green    { background: #22C55E; }
+.color-swatch.blue     { background: #3B82F6; }
+.color-swatch.orange   { background: #F97316; }
+.color-swatch.purple   { background: #A855F7; }
+.color-swatch.rose     { background: #F43F5E; }
+.color-swatch.teal     { background: #14B8A6; }
+.color-swatch.yellow   { background: #EAB308; }
+
+/* ---- 详情弹窗 ---- */
+.detail-section { margin-bottom: 20px; }
+
+.detail-section h5 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.detail-card {
+    padding: 12px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+}
+
+.detail-card-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.detail-card-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.83rem;
+}
+
+.detail-row:last-child { border-bottom: none; }
+.detail-row-label { color: var(--text-muted); }
+.detail-row-value { color: var(--text-primary); font-weight: 500; }
+
+.detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.detail-actions .btn {
+    flex: 1;
+    height: 36px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 1px solid var(--border-default);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.detail-actions .btn.primary {
+    background: var(--primary-gradient);
+    border-color: transparent;
+    color: white;
+}
+
+.detail-actions .btn.danger:hover {
+    background: var(--danger-light);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-search input { width: 100%; }
+    .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="users-page">
+
+    <!-- 页面头部 -->
+    <div class="users-header">
+        <div class="users-header-left">
+            <h1>用户管理</h1>
+            <p id="currentStationLabel">全部站点</p>
+        </div>
+        <div class="users-header-right">
+            <button class="header-btn" id="settingsBtn" title="站点颜色设置">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.83 1.08 1.51 1.51H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon users">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="statUsers">0</div>
+                <div class="stat-label">用户数</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon templates">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="statTemplates">0</div>
+                <div class="stat-label">模板数</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon selected">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="statSelected">0</div>
+                <div class="stat-label">已选中</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选操作栏 -->
+    <div class="filter-bar">
+        <div class="station-filters" id="stationFilters">
+            <span class="station-filters-label">站点</span>
+            <!-- 动态生成 -->
+        </div>
+        <div class="filter-search">
+            <svg class="filter-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="搜索用户 ID 或姓名…" />
+        </div>
+        <div class="filter-actions">
+            <button class="action-btn" id="refreshBtn" title="刷新">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                刷新
+            </button>
+            <button class="action-btn primary" id="addUserBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                注册
+            </button>
+            <button class="action-btn danger" id="batchDeleteBtn" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                删除
+            </button>
+        </div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-card">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th class="checkbox-cell"><input type="checkbox" id="selectAll"></th>
+                    <th>用户 ID</th>
+                    <th>姓名</th>
+                    <th>站点</th>
+                    <th>样本</th>
+                    <th>质量</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr>
+                    <td colspan="8" class="table-empty">
+                        <div class="table-empty-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </div>
+                        <p>暂无用户</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="table-footer" id="tableFooter" style="display:none;">
+            <span class="table-footer-info" id="tableFooterInfo"></span>
+            <div class="pagination">
+                <button class="page-btn" id="prevPage">上一页</button>
+                <span class="page-info" id="pageInfo">第 1 页</span>
+                <button class="page-btn" id="nextPage">下一页</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 站点颜色设置弹窗 -->
+<div class="modal" id="settingsModal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>站点管理</h3>
+            <button class="modal-close" id="closeSettingsBtn">×</button>
+        </div>
+        <div class="settings-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <div class="settings-section-title" style="margin:0;">站点列表</div>
+                <button onclick="addStationRow()" style="height:28px;padding:0 10px;font-size:0.78rem;border:1px solid var(--border-default);border-radius:6px;background:var(--bg-raised);color:var(--text-secondary);cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:var(--font-sans);">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    添加站点
+                </button>
+            </div>
+            <div id="stationColorRows">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+        <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+            <button class="action-btn" id="cancelSettingsBtn">取消</button>
+            <button class="action-btn primary" id="saveSettingsBtn">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 用户详情弹窗 -->
+<div class="modal" id="userModal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>用户详情</h3>
+            <button class="modal-close" id="closeUserModalBtn">×</button>
+        </div>
+        <div id="userModalBody"></div>
+    </div>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="modal" id="deleteModal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content" style="max-width:360px;">
+        <div class="modal-header">
+            <h3>确认删除</h3>
+            <button class="modal-close" id="closeDeleteModalBtn">×</button>
+        </div>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin:0 0 16px;line-height:1.6;">
+            确定要删除用户 <strong id="deleteUserName" style="color:var(--text-primary);"></strong> 吗？此操作将删除该用户的所有样本，无法撤销。
+        </p>
+        <div style="display:flex;gap:8px;">
+            <button class="action-btn" id="cancelDeleteBtn" style="flex:1;">取消</button>
+            <button class="action-btn danger" id="confirmDeleteBtn" style="flex:1;border-color:var(--danger-color);color:var(--danger-color);">删除</button>
+        </div>
+    </div>
+</div>
+
+<!-- 修改站点弹窗 -->
+<div class="modal" id="changeStationModal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content" style="max-width:360px;">
+        <div class="modal-header">
+            <h3 id="changeStationTitle">修改站点</h3>
+            <button class="modal-close" id="closeChangeStationBtn">×</button>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 16px;">
+            将用户 <strong id="changeStationUser" style="color:var(--text-primary);"></strong> 的站点修改为：
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;" id="changeStationOptions">
+            <!-- 动态生成站点选项 -->
+        </div>
+        <div style="border-top:1px solid var(--border-light);padding-top:12px;">
+            <button class="action-btn" onclick="openNewStationInput()" style="width:100%;justify-content:center;color:var(--text-muted);border-styledashed;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                使用新站点名称
+            </button>
+            <div id="newStationInput" style="display:none;margin-top:8px;">
+                <input id="newStationName" type="text" placeholder="输入新站点名称…" style="width:100%;height:36px;padding:0 12px;font-size:0.85rem;font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;box-sizing:border-box;" />
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="action-btn" onclick="closeChangeStationModal()" style="flex:1;">取消</button>
+            <button class="action-btn primary" onclick="submitChangeStation()" style="flex:1;">确认修改</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CURRENT_ROLE = {{ current_role | tojson }};
+const CURRENT_STATION = {{ current_station | tojson }};
+
+// ---- 颜色配置 ----
+const COLOR_OPTIONS = [
+    { id: 'slate',   bg: '#71717A', label: '灰' },
+    { id: 'green',   bg: '#22C55E', label: '绿' },
+    { id: 'blue',    bg: '#3B82F6', label: '蓝' },
+    { id: 'orange',  bg: '#F97316', label: '橙' },
+    { id: 'purple', bg: '#A855F7', label: '紫' },
+    { id: 'rose',    bg: '#F43F5E', label: '玫红' },
+    { id: 'teal',    bg: '#14B8A6', label: '青' },
+    { id: 'yellow',  bg: '#EAB308', label: '黄' },
+];
+
+// 从 allStations（API加载）获取站点颜色
+function getStationBg(station) {
+    if (!station) return '#71717A';
+    const s = allStations.find(x => x.name === station);
+    if (s) {
+        const opt = COLOR_OPTIONS.find(c => c.id === s.color);
+        return opt ? opt.bg : '#71717A';
+    }
+    // 未知站点默认灰色
+    return '#71717A';
+}
+
+// ---- 状态 ----
+let allUsers = [];
+let filteredUsers = [];
+let allStations = [];        // 从 API 加载
+let selectedUsers = new Set();
+let currentPage = 1;
+const pageSize = 15;
+let activeStation = '全部';
+let pendingDeleteUserId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    setupEventListeners();
+});
+
+// ---- 数据加载 ----
+async function loadUsers() {
+    showLoading();
+    try {
+        const [usersResp, stationsResp] = await Promise.all([
+            fetch('/api/users'),
+            fetch('/api/stations')
+        ]);
+        const usersResult = await usersResp.json();
+        const stationsResult = await stationsResp.json();
+        if (usersResult.success) {
+            allUsers = usersResult.data.users || [];
+        }
+        if (stationsResult.success) {
+            allStations = stationsResult.data || [];
+        }
+        buildStationFilters();
+        applyFilters();
+    } catch(e) {
+        showToast('加载失败', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function buildStationFilters() {
+    // 收集所有站点
+    const stations = ['全部', ...new Set(allUsers.map(u => u.station || '未知').filter(Boolean))];
+    const container = document.getElementById('stationFilters');
+    // 保留标签
+    const label = container.querySelector('.station-filters-label');
+    container.innerHTML = '';
+    container.appendChild(label);
+
+    stations.forEach(station => {
+        const pill = document.createElement('div');
+        pill.className = 'station-pill' + (station === activeStation ? ' active' : '');
+        pill.dataset.station = station;
+
+        const dot = document.createElement('span');
+        dot.className = 'station-dot';
+        dot.style.background = station === '全部' ? 'var(--text-muted)' : getStationBg(station);
+
+        const text = document.createElement('span');
+        text.textContent = station;
+
+        pill.appendChild(dot);
+        pill.appendChild(text);
+        pill.addEventListener('click', () => {
+            activeStation = station;
+            document.querySelectorAll('.station-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            // 更新 label
+            document.getElementById('currentStationLabel').textContent =
+                station === '全部' ? '全部站点' : station;
+            currentPage = 1;
+            applyFilters();
+        });
+        container.appendChild(pill);
+    });
+}
+
+function applyFilters() {
+    const term = document.getElementById('searchInput').value.trim().toLowerCase();
+    filteredUsers = allUsers.filter(u => {
+        const matchStation = activeStation === '全部' || (u.station || '未知') === activeStation;
+        const matchSearch = !term ||
+            (u.user_id || '').toLowerCase().includes(term) ||
+            (u.user_name || '').toLowerCase().includes(term);
+        return matchStation && matchSearch;
+    });
+    renderTable();
+    updateStats();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('usersTableBody');
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * pageSize;
+    const pageData = filteredUsers.slice(start, start + pageSize);
+
+    if (pageData.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="8" class="table-empty">
+                <div class="table-empty-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <p>暂无用户</p>
+            </td></tr>`;
+        document.getElementById('tableFooter').style.display = 'none';
+        return;
+    }
+
+    tbody.innerHTML = pageData.map(u => {
+        const sid = escapeHtml(u.user_id);
+        const isSelected = selectedUsers.has(u.user_id);
+        const bg = getStationBg(u.station || '未知');
+        const stationLabel = u.station || '未知';
+        const quality = u.avg_quality || 0.8;
+        const sampleCount = u.sample_count || 1;
+        return `<tr data-user-id="${sid}">
+            <td class="checkbox-cell"><input type="checkbox" class="user-checkbox" value="${sid}" ${isSelected ? 'checked' : ''}></td>
+            <td class="user-id-cell">${sid}</td>
+            <td class="user-name-cell">${u.user_name ? escapeHtml(u.user_name) : '<span style="color:var(--text-ghost)">--</span>'}</td>
+            <td><span class="station-badge ${CURRENT_ROLE === 'admin' ? 'clickable' : ''}" style="background:${bg}22;color:${bg};border:1px solid ${bg}44;${CURRENT_ROLE === 'admin' ? 'cursor:pointer;' : ''}" ${CURRENT_ROLE === 'admin' ? `onclick="openChangeStationModal('${sid}', '${escapeHtml(stationLabel)}')"` : ''}>
+                <span style="width:6px;height:6px;border-radius:50%;background:${bg};display:inline-block;"></span>
+                ${escapeHtml(stationLabel)}
+            </span></td>
+            <td><span class="sample-badge ${sampleCount >= 3 ? 'ok' : ''}">${sampleCount}</span></td>
+            <td>
+                <div class="quality-cell">
+                    <div class="quality-bar"><div class="quality-fill" style="width:${quality*100}%;background:${quality >= 0.7 ? 'var(--success-color)' : quality >= 0.4 ? 'var(--warning-color)' : 'var(--danger-color)'}"></div></div>
+                    <span class="quality-pct">${(quality*100).toFixed(0)}%</span>
+                </div>
+            </td>
+            <td style="color:var(--text-muted);font-size:0.78rem;">${u.created_at ? formatDate(u.created_at) : '--'}</td>
+            <td class="actions-cell">
+                <button class="icon-btn view-btn" title="查看">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                ${(CURRENT_ROLE === 'admin' || u.station === CURRENT_STATION) ? `
+                <button class="icon-btn danger delete-btn" title="删除">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>` : ''}
+            </td>
+        </tr>`;
+    }).join('');
+
+    // 分页
+    const footer = document.getElementById('tableFooter');
+    footer.style.display = 'flex';
+    document.getElementById('tableFooterInfo').textContent =
+        `共 ${filteredUsers.length} 条，第 ${currentPage} / ${totalPages} 页`;
+    document.getElementById('pageInfo').textContent = `第 ${currentPage} / ${totalPages} 页`;
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+    bindTableEvents();
+}
+
+function updateStats() {
+    document.getElementById('statUsers').textContent = allUsers.length;
+    document.getElementById('statTemplates').textContent =
+        allUsers.reduce((s, u) => s + (u.sample_count || 1), 0);
+    document.getElementById('statSelected').textContent = selectedUsers.size;
+    document.getElementById('batchDeleteBtn').style.display =
+        (selectedUsers.size > 0 && CURRENT_ROLE === 'admin') ? 'inline-flex' : 'none';
+}
+
+function bindTableEvents() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) selectedUsers.add(cb.value);
+            else selectedUsers.delete(cb.value);
+            updateStats();
+        });
+    });
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => showUserDetail(btn.closest('tr').dataset.userId));
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => showDeleteConfirm(btn.closest('tr').dataset.userId));
+    });
+}
+
+// ---- 设置弹窗 ----
+function openSettingsModal() {
+    const container = document.getElementById('stationColorRows');
+
+    // 渲染现有站点
+    container.innerHTML = allStations.map(s => `
+        <div class="station-color-row" data-station-name="${escapeHtml(s.name)}">
+            <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+                <input type="text" class="station-name-input" value="${escapeHtml(s.name)}"
+                       style="flex:1;min-width:80px;max-width:130px;height:30px;padding:0 8px;font-size:0.82rem;font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;" />
+                <button onclick="deleteStationRow(this, '${escapeHtml(s.name)}')" title="删除站点" style="width:28px;height:28px;border:1px solid rgba(239,68,68,0.3);border-radius:6px;background:var(--danger-light);color:var(--danger-color);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>
+            </div>
+            <div class="station-color-options">
+                ${COLOR_OPTIONS.map(c => `
+                    <div class="color-swatch ${c.id} ${c.id === s.color ? 'selected' : ''}"
+                         data-color="${c.id}"
+                         style="background:${c.bg};"
+                         title="${c.label}">
+                    </div>`).join('')}
+            </div>
+        </div>`).join('');
+
+    // 颜色选择
+    container.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            const row = swatch.closest('.station-color-row');
+            row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            swatch.classList.add('selected');
+        });
+    });
+
+    document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function deleteStationRow(btn, stationName) {
+    if (!confirm(`确定删除站点 "${stationName}"？用户数据不受影响。`)) return;
+    btn.closest('.station-color-row').remove();
+}
+
+function addStationRow() {
+    const container = document.getElementById('stationColorRows');
+    const div = document.createElement('div');
+    div.className = 'station-color-row';
+    div.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+            <input type="text" class="station-name-input" value=""
+                   placeholder="新站点名称"
+                   style="flex:1;min-width:80px;max-width:130px;height:30px;padding:0 8px;font-size:0.82rem;font-family:var(--font-sans);color:var(--text-primary);background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;" />
+        </div>
+        <div class="station-color-options">
+            ${COLOR_OPTIONS.map(c => `
+                <div class="color-swatch ${c.id}"
+                     data-color="${c.id}"
+                     style="background:${c.bg};"
+                     title="${c.label}">
+                </div>`).join('')}
+        </div>`;
+    div.querySelectorAll('.color-swatch').forEach(s => s.addEventListener('click', () => {
+        div.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('selected'));
+        s.classList.add('selected');
+    }));
+    container.appendChild(div);
+    div.querySelector('.station-name-input').focus();
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+async function saveSettings() {
+    const rows = document.querySelectorAll('.station-color-row');
+    const toCreate = [];
+    const toUpdate = [];
+
+    rows.forEach(row => {
+        const nameInput = row.querySelector('.station-name-input');
+        const name = nameInput.value.trim();
+        const selected = row.querySelector('.color-swatch.selected');
+        const color = selected ? selected.dataset.color : 'slate';
+
+        if (!name) return;
+
+        // 判断是新增还是更新
+        const originalName = row.dataset.stationName;
+        if (!originalName) {
+            // 新增
+            toCreate.push({ name, color });
+        } else {
+            // 更新（可能改了名字或颜色）
+            const origStation = allStations.find(s => s.name === originalName);
+            const origColor = origStation ? origStation.color : 'slate';
+            if (name !== originalName || color !== origColor) {
+                toUpdate.push({ name: originalName, newName: name, color });
+            }
+        }
+    });
+
+    try {
+        // 创建新站点
+        for (const { name, color } of toCreate) {
+            await fetch('/api/stations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, color })
+            });
+        }
+        // 更新现有站点（改名+改颜色）
+        for (const { name, newName, color } of toUpdate) {
+            await fetch(`/api/stations/${encodeURIComponent(name)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, color })
+            });
+        }
+        closeSettingsModal();
+        loadUsers();
+        showToast('站点设置已保存', 'success');
+    } catch(e) {
+        showToast('保存失败', 'error');
+    }
+}
+
+// ---- 用户详情 ----
+async function showUserDetail(userId) {
+    try {
+        const resp = await fetch(`/api/users/${encodeURIComponent(userId)}`);
+        const result = await resp.json();
+        if (!result.success) { showToast('获取详情失败', 'error'); return; }
+        const u = result.data;
+        const bg = getStationBg(u.station || '未知');
+        const quality = u.avg_quality || 0.8;
+
+        document.getElementById('userModalBody').innerHTML = `
+            <div class="detail-section">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                    <div style="width:48px;height:48px;border-radius:12px;background:${bg}22;display:flex;align-items:center;justify-content:center;color:${bg};font-size:1.2rem;font-weight:700;">
+                        ${(u.user_id||'?').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:600;color:var(--text-primary);">${escapeHtml(u.user_id)}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);">${u.user_name ? escapeHtml(u.user_name) : '未设置姓名'}</div>
+                    </div>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-card-value">${u.sample_count || 1}</div>
+                        <div class="detail-card-label">样本数</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-card-value">${(quality*100).toFixed(0)}%</div>
+                        <div class="detail-card-label">平均质量</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-card-value">${u.feature_dim || 128}</div>
+                        <div class="detail-card-label">特征维度</div>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-section">
+                <h5>信息</h5>
+                <div class="detail-row">
+                    <span class="detail-row-label">站点</span>
+                    <span class="detail-row-value"><span class="station-badge" style="background:${bg}22;color:${bg};border:1px solid ${bg}44;font-size:0.75rem;">${escapeHtml(u.station || '--')}</span></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-row-label">注册时间</span>
+                    <span class="detail-row-value">${u.created_at ? formatDate(u.created_at) : '--'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-row-label">更新时间</span>
+                    <span class="detail-row-value">${u.updated_at ? formatDate(u.updated_at) : '--'}</span>
+                </div>
+            </div>
+            <div class="detail-actions">
+                <button class="btn primary" onclick="closeUserModal();window.location.href='/enroll?user=${escapeHtml(u.user_id)}'">+ 添加样本</button>
+                <button class="btn danger" onclick="closeUserModal();showDeleteConfirm('${escapeHtml(u.user_id)}')">删除</button>
+            </div>`;
+        document.getElementById('userModal').style.display = 'flex';
+    } catch(e) {
+        showToast('获取详情失败', 'error');
+    }
+}
+
+// ---- 删除 ----
+function showDeleteConfirm(userId) {
+    pendingDeleteUserId = userId;
+    document.getElementById('deleteUserName').textContent = userId;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    pendingDeleteUserId = null;
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+let pendingChangeUserId = null;
+let pendingChangeStation = null;
+
+function openChangeStationModal(userId, currentStation) {
+    pendingChangeUserId = userId;
+    pendingChangeStation = currentStation;
+    document.getElementById('changeStationUser').textContent = userId;
+    document.getElementById('newStationInput').style.display = 'none';
+    document.getElementById('newStationName').value = '';
+
+    // 从 allStations（API加载的站点配置）获取站点列表
+    const optionsEl = document.getElementById('changeStationOptions');
+    optionsEl.innerHTML = allStations.map(s => {
+        const bg = s.color || 'var(--text-muted)';
+        const selected = s.name === currentStation ? 'checked' : '';
+        return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid ${selected ? bg : 'var(--border-default)'};background:${selected ? bg+'11' : 'var(--bg-surface)'};cursor:pointer;transition:all 0.12s;" onclick="selectStationOption('${escapeHtml(s.name)}', '${bg}')">
+            <input type="radio" name="stationOption" value="${escapeHtml(s.name)}" ${selected} style="accent-color:${bg};" onchange="selectStationOption('${escapeHtml(s.name)}', '${bg}')">
+            <span style="width:8px;height:8px;border-radius:50%;background:${bg};flex-shrink:0;"></span>
+            <span style="font-size:0.85rem;color:var(--text-primary);">${escapeHtml(s.name)}</span>
+        </label>`;
+    }).join('');
+
+    document.getElementById('changeStationModal').style.display = 'flex';
+}
+
+function selectStationOption(station, bg) {
+    pendingChangeStation = station;
+    document.getElementById('newStationInput').style.display = 'none';
+    // update radio UI
+    document.querySelectorAll('#changeStationOptions label').forEach(el => {
+        const input = el.querySelector('input');
+        const isSelected = input.value === station;
+        el.style.borderColor = isSelected ? bg : 'var(--border-default)';
+        el.style.background = isSelected ? bg + '11' : 'var(--bg-surface)';
+        input.checked = isSelected;
+    });
+}
+
+function openNewStationInput() {
+    pendingChangeStation = '__new__';
+    document.querySelectorAll('#changeStationOptions label').forEach(el => {
+        el.style.borderColor = 'var(--border-default)';
+        el.style.background = 'var(--bg-surface)';
+        el.querySelector('input').checked = false;
+    });
+    document.getElementById('newStationInput').style.display = '';
+    document.getElementById('newStationName').focus();
+}
+
+function closeChangeStationModal() {
+    pendingChangeUserId = null;
+    pendingChangeStation = null;
+    document.getElementById('changeStationModal').style.display = 'none';
+}
+
+async function submitChangeStation() {
+    let targetStation = pendingChangeStation;
+
+    if (targetStation === '__new__') {
+        targetStation = document.getElementById('newStationName').value.trim();
+        if (!targetStation) {
+            showToast('请输入站点名称', 'error');
+            return;
+        }
+    }
+
+    try {
+        const resp = await fetch(`/api/users/${encodeURIComponent(pendingChangeUserId)}/station`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ station: targetStation })
+        });
+        const result = await resp.json();
+        if (result.success) {
+            showToast(`已修改为 ${targetStation}`, 'success');
+            closeChangeStationModal();
+            loadUsers();
+        } else {
+            showToast(result.message || '修改失败', 'error');
+        }
+    } catch(e) {
+        showToast('修改失败', 'error');
+    }
+}
+
+async function confirmDelete() {
+    if (!pendingDeleteUserId) return;
+    try {
+        const resp = await fetch(`/api/users/${encodeURIComponent(pendingDeleteUserId)}`, { method: 'DELETE' });
+        const result = await resp.json();
+        if (result.success) {
+            showToast('用户已删除', 'success');
+            selectedUsers.delete(pendingDeleteUserId);
+            loadUsers();
+        } else {
+            showToast(result.message || '删除失败', 'error');
+        }
+    } catch(e) {
+        showToast('删除失败', 'error');
+    } finally {
+        closeDeleteModal();
+    }
+}
+
+async function batchDeleteUsers() {
+    if (selectedUsers.size === 0) return;
+    if (!confirm(`确定删除选中的 ${selectedUsers.size} 个用户？`)) return;
+    showLoading();
+    try {
+        const resp = await fetch('/api/users/batch-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_ids: Array.from(selectedUsers) })
+        });
+        const result = await resp.json();
+        if (result.success) {
+            showToast(`已删除 ${result.data.deleted} 个用户`, 'success');
+            selectedUsers.clear();
+            loadUsers();
+        } else {
+            showToast('批量删除失败', 'error');
+        }
+    } catch(e) {
+        showToast('批量删除失败', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ---- 工具函数 ----
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+}
+
+function formatDate(s) {
+    if (!s) return '--';
+    return new Date(s).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+// ---- 事件绑定 ----
+function setupEventListeners() {
+    // 搜索
+    let t;
+    document.getElementById('searchInput').addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => { currentPage = 1; applyFilters(); }, 250);
+    });
+
+    // 工具栏按钮
+    document.getElementById('refreshBtn').addEventListener('click', () => { selectedUsers.clear(); loadUsers(); });
+    document.getElementById('addUserBtn').addEventListener('click', () => window.location.href = '/enroll');
+    document.getElementById('batchDeleteBtn').addEventListener('click', batchDeleteUsers);
+
+    // 全选
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const pageIds = filteredUsers.slice((currentPage-1)*pageSize, currentPage*pageSize).map(u => u.user_id);
+        if (this.checked) pageIds.forEach(id => selectedUsers.add(id));
+        else pageIds.forEach(id => selectedUsers.delete(id));
+        document.querySelectorAll('.user-checkbox').forEach(cb => {
+            cb.checked = this.checked;
+        });
+        updateStats();
+    });
+
+    // 分页
+    document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); }});
+    document.getElementById('nextPage').addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+        if (currentPage < totalPages) { currentPage++; renderTable(); }
+    });
+
+    // 设置弹窗
+    document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+    document.getElementById('closeSettingsBtn').addEventListener('click', closeSettingsModal);
+    document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettingsModal);
+    document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+    document.querySelector('#settingsModal .modal-overlay').addEventListener('click', closeSettingsModal);
+
+    // 详情弹窗
+    document.getElementById('closeUserModalBtn').addEventListener('click', closeUserModal);
+    document.querySelector('#userModal .modal-overlay').addEventListener('click', closeUserModal);
+
+    // 删除弹窗
+    document.getElementById('closeDeleteModalBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+    document.querySelector('#deleteModal .modal-overlay').addEventListener('click', closeDeleteModal);
+
+    // 修改站点弹窗
+    document.getElementById('closeChangeStationBtn').addEventListener('click', closeChangeStationModal);
+    document.querySelector('#changeStationModal .modal-overlay').addEventListener('click', closeChangeStationModal);
+}
+</script>
+{% endblock %}
